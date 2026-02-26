@@ -6,16 +6,21 @@ import com.registration.*;
 import com.user.*;
 import com.user.validation.*;
 import com.exception.*;
+
+import java.util.HashMap;
+
 /*
-Contacts App : UC-01 User Registration
+Contacts App : UC-02 User Authentication
 This class stores users in memory.
 It does the following things:
     - Uses simple HashMaps to store users
-    - Allows searching by username and email
-    - Very simple beginner-friendly storage system
+    - Checks duplicates by username/email
+    - Finds users by username or email for login
+    - Keeps storage code very beginner-friendly
 
 @author Developer
-@version 1.0
+@version 2.0
+
 */
 
 public class UserRepository {
@@ -34,5 +39,13 @@ public class UserRepository {
     public void save(User user) {
         byUsername.put(user.getUsername(), user);
         byEmail.put(user.getEmail(), user);
+    }
+
+    public User findByUsername(String username) {
+        return byUsername.get(username);
+    }
+
+    public User findByEmail(String email) {
+        return byEmail.get(email);
     }
 }

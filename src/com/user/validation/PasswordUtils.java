@@ -6,19 +6,22 @@ import com.registration.*;
 import com.user.*;
 import com.user.validation.*;
 import com.exception.*;
+import java.security.MessageDigest;
+
 /*
-Contacts App : UC-01 User Registration
-This class hashes passwords simply.
+Contacts App : UC-02 User Authentication
+This class hashes and verifies passwords.
 It does the following things:
-    - Creates a very simple salt (just time in ms)
+    - Creates a very simple salt (time in ms)
     - Hashes salt + password using SHA-256
-    - Returns HEX strings for storage
+    - Compares stored hash with a new hash to verify
+    - Keeps implementation simple for beginners
 
-NOTE: This is intentionally very simple for beginners,
-not recommended for real applications.
+NOTE: This is for learning. Not for production use.
 
-/@author Developer
-@version 1.0
+/author Developer
+@version 2.0
+
 */
 
 public class PasswordUtils {
@@ -36,6 +39,12 @@ public class PasswordUtils {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static boolean verifyPassword(String password, String salt, String expectedHash) {
+        String newHash = hashPassword(password, salt);
+        if (newHash == null) return false;
+        return newHash.equals(expectedHash);
     }
 
     private static String toHex(byte[] data) {

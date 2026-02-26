@@ -1,0 +1,19 @@
+package com.exception;
+
+
+/*
+Contacts App : UC-01 User Registration
+This class handles duplicate users.
+It does the following things:
+    - Throws an error if username/email already exists
+    - Makes registration logic easier to read
+
+@author Developer
+@version 1.0
+*/
+
+public class DuplicateUserException extends RuntimeException {
+    public DuplicateUserException(String msg) {
+        super(msg);
+    }
+}

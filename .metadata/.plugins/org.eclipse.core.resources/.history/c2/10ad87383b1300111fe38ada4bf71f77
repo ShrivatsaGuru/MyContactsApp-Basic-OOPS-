@@ -1,0 +1,61 @@
+package com.user;
+
+public abstract class UserProfile
+{
+	private int id;
+	private String fullName;
+	private String email;
+	private String password;
+	private String userName;
+
+	public UserProfile(int id, String fullName, String email, String password, String userName) {
+		super();
+		this.id = id;
+		this.fullName = fullName;
+		this.email = email;
+		this.password = password;
+		this.userName = userName;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public String getFullName() {
+		return fullName;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	private void setId(int id) {
+		this.id = id;
+	}
+
+	private void setFullName(String fullName) {
+		this.fullName = fullName;
+	}
+
+	private void setEmail(String email) {
+		this.email = email;
+	}
+
+	private void setPassword(String password) {
+		this.password = password;
+	}
+
+	private void setUserName(String userName) {
+		this.userName = userName;
+	}
+	
+	
+}

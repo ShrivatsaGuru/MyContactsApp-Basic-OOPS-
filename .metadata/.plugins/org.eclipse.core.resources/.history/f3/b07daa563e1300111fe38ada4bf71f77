@@ -1,0 +1,57 @@
+package com.user;
+
+
+import java.util.UUID;
+
+import com.exception.DuplicateUserException;
+import com.user.validation.PasswordUtils;
+import com.user.validation.ValidationUtils;
+
+/*
+Contacts App : UC-01 User Registration
+This class handles user registration.
+It does the following things:
+    - Validates all input fields
+    - Checks for duplicate username/email
+    - Hashes password using simple SHA-256
+    - Saves the new user in the repository
+    - Keeps flow extremely simple for beginners
+
+@author Developer
+@version 1.0
+*/
+
+public class RegistrationService {
+
+    private UserRepository repo;
+
+    public RegistrationService(UserRepository repo) {
+        this.repo = repo;
+    }
+
+    public User register(UserRegistrationRequest req) {
+
+        ValidationUtils.requireNotEmpty(req.username, "Username");
+        ValidationUtils.requireNotEmpty(req.fullName, "Full Name");
+        ValidationUtils.requireNotEmpty(req.email, "Email");
+        ValidationUtils.requireNotEmpty(req.password, "Password");
+
+        ValidationUtils.validateEmail(req.email);
+        ValidationUtils.validatePassword(req.password);
+
+        if (repo.existsByUsername(req.username)) {
+            throw new DuplicateUserException("Username already taken");
+        }
+        if (repo.existsByEmail(req.email)) {
+            throw new DuplicateUserException("Email already used");
+        }
+
+        String id = (req.id == null || req.id.isEmpty()) ? UUID.randomUUID().toString() : req.id;
+        String salt = PasswordUtils.generateSalt();
+        String hash = PasswordUtils.hashPassword(req.password, salt);
+
+        User u = new User(id, req.username, req.fullName, req.email, hash, salt, req.userType);
+        repo.save(u);
+        return u;
+    }
+}
