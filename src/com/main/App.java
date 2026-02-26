@@ -8,114 +8,143 @@ import java.util.Scanner;
 import com.authentication.*;
 import com.registration.RegistrationService;
 import com.registration.UserRegistrationRequest;
+import com.createContact.*;
+import java.util.*;
 
 
-import java.util.Scanner;
 
 /*
-Contacts App : UC-03 User Profile Management
-This class demonstrates profile updates and password change.
+Contacts App : UC-04 Create Contact
+This class guides the user after registration.
 It does the following things:
-    - Registers a user from input
-    - Logs in using Basic or OAuth (dummy)
-    - Updates full name and email
-    - Changes password (old -> new)
-    - Logs in again to confirm the new password works
+    - Registers a new user from console input
+    - Asks the user what to do next (menu)
+    - Lets the user change their profile details
+    - Lets the user add simple contacts
+    - Lets the user list all contacts
+    - Exits cleanly when the user is done
 
 @author Developer
-@version 3.0
+@version 4.0
 */
 
 public class App {
     public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
-        UserRepository repo = new UserRepository();
-        RegistrationService regService = new RegistrationService(repo);
-        LoginService loginService = new LoginService(repo);
-        ProfileService profileService = new ProfileService(repo);
 
-        System.out.println("=== UC-03 Demo ===");
+        // --- Setup repositories and services (very simple) ---
+        UserRepository userRepo = new UserRepository();
+        RegistrationService regService = new RegistrationService(userRepo);
+        ProfileService profileService = new ProfileService(userRepo);
+
+        ContactRepository contactRepo = new ContactRepository();
+        ContactService contactService = new ContactService(contactRepo);
+
+        System.out.println("=== Contacts App (UC-04) ===");
         System.out.println("Step 1: Register a new user");
 
-        // Register
+        // --- Registration input ---
         UserRegistrationRequest req = new UserRegistrationRequest();
         System.out.print("Enter username: ");
         req.username = sc.nextLine();
+
         System.out.print("Enter full name: ");
         req.fullName = sc.nextLine();
+
         System.out.print("Enter email: ");
         req.email = sc.nextLine();
+
         System.out.print("Enter password: ");
         req.password = sc.nextLine();
-        req.userType = UserType.FREE;
 
-        User user;
+        System.out.print("Enter user type (FREE/PREMIUM): ");
+        String type = sc.nextLine().trim().toUpperCase();
+        req.userType = "PREMIUM".equals(type) ? UserType.PREMIUM : UserType.FREE;
+
+        // --- Register the user ---
+        User currentUser;
         try {
-            user = regService.register(req);
-            System.out.println("Registered! ID: " + user.getId());
+            currentUser = regService.register(req);
+            System.out.println("\nRegistration successful!");
+            System.out.println("Hello, " + currentUser.getFullName() + " (Type: " + currentUser.getUserType() + ")");
+            System.out.println("You can now choose what to do next.\n");
         } catch (Exception e) {
             System.out.println("Registration failed: " + e.getMessage());
             sc.close();
-            return;
+            return; // stop if registration failed
         }
 
-        // Login once (Basic)
-        System.out.println("\nStep 2: Login (Basic)");
-        System.out.print("Username: ");
-        String lu = sc.nextLine();
-        System.out.print("Password: ");
-        String lp = sc.nextLine();
+        // --- Menu loop: let the user choose what to do next ---
+        while (true) {
+            System.out.println("What would you like to do?");
+            System.out.println("1) Change my details (full name / email)");
+            System.out.println("2) Add a contact");
+            System.out.println("3) List my contacts");
+            System.out.println("4) Exit");
+            System.out.print("Enter choice (1-4): ");
+            String choice = sc.nextLine().trim();
 
-        User logged = loginService.login(new BasicAuth(lu, lp));
-        if (logged == null) {
-            System.out.println("Login failed. Exiting.");
-            sc.close();
-            return;
-        }
-        System.out.println("Login success! Hello, " + logged.getFullName());
+            if ("1".equals(choice)) {
+                // Change details
+                System.out.println("\n-- Change My Details --");
+                System.out.print("New full name: ");
+                String newName = sc.nextLine();
+                System.out.print("New email: ");
+                String newEmail = sc.nextLine();
 
-        // Update profile
-        System.out.println("\nStep 3: Update Profile");
-        System.out.print("New full name: ");
-        String newName = sc.nextLine();
-        System.out.print("New email: ");
-        String newEmail = sc.nextLine();
+                try {
+                    profileService.updateProfile(currentUser, newName, newEmail);
+                    System.out.println("Details updated. New name: " + currentUser.getFullName()
+                            + ", New email: " + currentUser.getEmail() + "\n");
+                } catch (Exception e) {
+                    System.out.println("Update failed: " + e.getMessage() + "\n");
+                }
 
-        try {
-            profileService.updateProfile(logged, newName, newEmail);
-            System.out.println("Profile updated! New name: " + logged.getFullName()
-                    + ", New email: " + logged.getEmail());
-        } catch (Exception e) {
-            System.out.println("Profile update failed: " + e.getMessage());
-        }
+            } else if ("2".equals(choice)) {
+                // Add a contact (simple)
+                System.out.println("\n-- Add Contact --");
+                System.out.print("Contact name: ");
+                String contactName = sc.nextLine();
 
-        // Change password
-        System.out.println("\nStep 4: Change Password");
-        System.out.print("Old password: ");
-        String oldPw = sc.nextLine();
-        System.out.print("New password: ");
-        String newPw = sc.nextLine();
+                List<String> phones = new ArrayList<>();
+                System.out.print("Phone number: ");
+                String p1 = sc.nextLine();
+                if (!p1.trim().isEmpty()) phones.add(p1.trim());
 
-        try {
-            profileService.changePassword(logged, oldPw, newPw);
-            System.out.println("Password changed successfully!");
-        } catch (Exception e) {
-            System.out.println("Password change failed: " + e.getMessage());
-        }
+                List<String> emails = new ArrayList<>();
+                System.out.print("Email address: ");
+                String e1 = sc.nextLine();
+                if (!e1.trim().isEmpty()) emails.add(e1.trim());
 
-        // Login again with new password
-        System.out.println("\nStep 5: Login Again (Basic) with new password");
-        System.out.print("Username: ");
-        String lu2 = sc.nextLine();
-        System.out.print("Password: ");
-        String lp2 = sc.nextLine();
+                try {
+                    Contact c = contactService.addContact(currentUser, contactName, phones, emails);
+                    System.out.println("Contact added! ID: " + c.getId() + "\n");
+                } catch (Exception e) {
+                    System.out.println("Could not add contact: " + e.getMessage() + "\n");
+                }
 
-        User logged2 = loginService.login(new BasicAuth(lu2, lp2));
-        if (logged2 != null) {
-            System.out.println("Login success (after password change)! Hi, " + logged2.getFullName());
-        } else {
-            System.out.println("Login failed with new password.");
+            } else if ("3".equals(choice)) {
+                // List contacts
+                System.out.println("\n-- My Contacts --");
+                List<Contact> all = contactRepo.getAll(currentUser.getId());
+                if (all.isEmpty()) {
+                    System.out.println("You have no contacts yet.\n");
+                } else {
+                    for (Contact c : all) {
+                        System.out.println("- " + c.getName());
+                        System.out.println("  Phones: " + c.getPhoneNumbers());
+                        System.out.println("  Emails: " + c.getEmailAddresses());
+                    }
+                    System.out.println();
+                }
+
+            } else if ("4".equals(choice)) {
+                break;
+
+            } else {
+                System.out.println("Invalid choice. Please enter 1, 2, 3, or 4.\n");
+            }
         }
 
         sc.close();
