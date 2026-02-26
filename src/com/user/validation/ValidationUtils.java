@@ -6,16 +6,19 @@ import com.registration.*;
 import com.user.*;
 import com.user.validation.*;
 import com.exception.*;
+
+
 /*
-Contacts App : UC-01 User Registration
+Contacts App : UC-03 User Profile Management
 This class provides simple validation.
 It does the following things:
     - Checks email contains '@'
-    - Checks password is at least 6 characters
+    - Checks password length for old/new passwords
     - Ensures values are not empty or null
+    - Adds a helper for new password validation in UC-03
 
 @author Developer
-@version 1.0
+@version 3.0
 */
 
 public class ValidationUtils {
@@ -37,5 +40,9 @@ public class ValidationUtils {
             throw new ValidationException("Password must be at least 6 characters");
         }
     }
-}
 
+    public static void validateNewPassword(String newPassword) {
+        // keep same simple rule for beginners
+        validatePassword(newPassword);
+    }
+}
