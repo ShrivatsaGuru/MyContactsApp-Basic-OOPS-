@@ -1,0 +1,46 @@
+package com.user.validation;
+
+import java.security.MessageDigest;
+import com.main.*;
+import com.registration.*;
+import com.user.*;
+import com.user.validation.*;
+import com.exception.*;
+/*
+Contacts App : UC-01 User Registration
+This class hashes passwords simply.
+It does the following things:
+    - Creates a very simple salt (just time in ms)
+    - Hashes salt + password using SHA-256
+    - Returns HEX strings for storage
+
+NOTE: This is intentionally very simple for beginners,
+not recommended for real applications.
+
+/@author Developer
+@version 1.0
+*/
+
+public class PasswordUtils {
+
+    public static String generateSalt() {
+        return String.valueOf(System.currentTimeMillis());
+    }
+
+    public static String hashPassword(String password, String salt) {
+        try {
+            String text = salt + password;
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(text.getBytes());
+            return toHex(hash);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String toHex(byte[] data) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : data) sb.append(String.format("%02x", b));
+        return sb.toString();
+    }
+}
