@@ -12,18 +12,18 @@ import com.editContact.EditContactService;
 
 import java.util.*;
 
-
 /*
-Contacts App : UC-07 Delete Contact
-This class demonstrates deleting contacts.
+Contacts App : UC-08 Bulk Operations
+This class demonstrates bulk delete and tagging.
 It does the following things:
     - Registers a user
-    - Lets the user add and list contacts
-    - Lets the user delete a contact by ID
+    - Lets the user add and edit contacts
+    - Lets the user bulk delete contacts by IDs
+    - Lets the user bulk add or remove a tag on many contacts
     - Keeps interactions very simple and beginner-friendly
 
 @author Developer
-@version 7.0
+@version 8.0
 */
 
 public class App {
@@ -38,6 +38,7 @@ public class App {
         ContactRepository contactRepo = new ContactRepository();
         ContactService contactService = new ContactService(contactRepo);
 
+        System.out.println("=== UC-08 Demo: Bulk Operations ===");
         System.out.println("Step 1: Register a new user");
 
         // Register user
@@ -69,9 +70,12 @@ public class App {
             System.out.println("2) Edit a contact");
             System.out.println("3) List my contacts");
             System.out.println("4) Delete a contact");
-            System.out.println("5) Change my details (name/email)");
-            System.out.println("6) Exit");
-            System.out.print("Enter choice (1-6): ");
+            System.out.println("5) Bulk delete contacts");
+            System.out.println("6) Bulk add a tag");
+            System.out.println("7) Bulk remove a tag");
+            System.out.println("8) Change my details (name/email)");
+            System.out.println("9) Exit");
+            System.out.print("Enter choice (1-9): ");
             String choice = sc.nextLine().trim();
 
             if ("1".equals(choice)) {
@@ -152,15 +156,15 @@ public class App {
                         System.out.println("  Name: " + c.getName());
                         System.out.println("  Phones: " + c.getPhoneNumbers());
                         System.out.println("  Emails: " + c.getEmailAddresses());
+                        System.out.println("  Tags: " + c.getTags());
                     }
                 }
 
             } else if ("4".equals(choice)) {
-                // Delete contact
+                // Delete single contact
                 System.out.println("\n-- Delete Contact --");
                 System.out.print("Enter Contact ID to delete: ");
                 String cid = sc.nextLine().trim();
-
                 try {
                     contactService.deleteContact(user, cid);
                     System.out.println("Contact deleted successfully.");
@@ -169,6 +173,45 @@ public class App {
                 }
 
             } else if ("5".equals(choice)) {
+                // Bulk delete
+                System.out.println("\n-- Bulk Delete Contacts --");
+                System.out.println("Enter contact IDs separated by commas:");
+                String line = sc.nextLine();
+                List<String> ids = parseIds(line);
+                int deleted = contactService.bulkDelete(user, ids);
+                System.out.println("Deleted " + deleted + " contacts.");
+
+            } else if ("6".equals(choice)) {
+                // Bulk add a tag
+                System.out.println("\n-- Bulk Add Tag --");
+                System.out.println("Enter contact IDs separated by commas:");
+                String line = sc.nextLine();
+                List<String> ids = parseIds(line);
+                System.out.print("Enter tag to ADD: ");
+                String tag = sc.nextLine().trim();
+                try {
+                    int updated = contactService.bulkAddTag(user, ids, tag);
+                    System.out.println("Tag added to " + updated + " contacts.");
+                } catch (Exception ex) {
+                    System.out.println("Bulk tag add failed: " + ex.getMessage());
+                }
+
+            } else if ("7".equals(choice)) {
+                // Bulk remove a tag
+                System.out.println("\n-- Bulk Remove Tag --");
+                System.out.println("Enter contact IDs separated by commas:");
+                String line = sc.nextLine();
+                List<String> ids = parseIds(line);
+                System.out.print("Enter tag to REMOVE: ");
+                String tag = sc.nextLine().trim();
+                try {
+                    int updated = contactService.bulkRemoveTag(user, ids, tag);
+                    System.out.println("Tag removed from " + updated + " contacts.");
+                } catch (Exception ex) {
+                    System.out.println("Bulk tag remove failed: " + ex.getMessage());
+                }
+
+            } else if ("8".equals(choice)) {
                 // Change user details
                 System.out.println("\n-- Change My Details --");
                 System.out.print("New full name: ");
@@ -182,15 +225,27 @@ public class App {
                     System.out.println("Update failed: " + ex.getMessage());
                 }
 
-            } else if ("6".equals(choice)) {
+            } else if ("9".equals(choice)) {
+                System.out.println("Goodbye!");
                 break;
 
             } else {
-                System.out.println("Invalid choice. Please enter 1-6.");
+                System.out.println("Invalid choice. Please enter 1-9.");
             }
         }
 
         sc.close();
+    }
+
+    private static List<String> parseIds(String csv) {
+        if (csv == null || csv.trim().isEmpty()) return new ArrayList<>();
+        String[] parts = csv.split(",");
+        List<String> ids = new ArrayList<>();
+        for (String p : parts) {
+            String id = p.trim();
+            if (!id.isEmpty()) ids.add(id);
+        }
+        return ids;
     }
 }
 

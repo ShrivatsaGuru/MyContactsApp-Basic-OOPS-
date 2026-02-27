@@ -15,7 +15,8 @@ It does the following things:
 @version 6.0
 */
 
-public class EditContactService {
+public class EditContactService 
+{
     public String newName;            
     public List<String> newPhones;    
     public List<String> newEmails;    
