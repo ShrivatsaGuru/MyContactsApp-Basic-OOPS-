@@ -1,9 +1,0 @@
-package com.user;
-
-public class PremiumUser extends UserProfile
-{
-	public PremiumUser(int id, String fullName, String email, String password, String userName)
-	{
-		super(id,fullName,email,password,userName);
-	}
-}
