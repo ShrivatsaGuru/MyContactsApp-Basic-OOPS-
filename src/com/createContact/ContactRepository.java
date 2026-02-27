@@ -1,23 +1,20 @@
 package com.createContact;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /*
-Contacts App : UC-04 Create Contact
+Contacts App : UC-06 Edit Contact
 This class stores contacts in memory.
 It does the following things:
     - Uses a HashMap of userId → list of contacts
     - Adds contacts for users
     - Returns all contacts for a user
-    - Counts contacts for a user
+    - Looks up a specific contact by its id
     - Keeps everything extremely simple for beginners
 
-@author
-Developer
-@version 4.0
+@author Developer
+@version 6.0
 */
 
 public class ContactRepository {
@@ -36,5 +33,12 @@ public class ContactRepository {
 
     public int countForUser(String userId) {
         return getAll(userId).size();
+    }
+
+    public Contact getById(String userId, String contactId) {
+        for (Contact c : getAll(userId)) {
+            if (c.getId().equals(contactId)) return c;
+        }
+        return null;
     }
 }
