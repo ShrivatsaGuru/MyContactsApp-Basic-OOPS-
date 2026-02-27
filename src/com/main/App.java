@@ -33,7 +33,6 @@ public class App {
 
         Scanner sc = new Scanner(System.in);
 
-        // --- Setup repositories and services (very simple) ---
         UserRepository userRepo = new UserRepository();
         RegistrationService regService = new RegistrationService(userRepo);
         ProfileService profileService = new ProfileService(userRepo);
@@ -43,8 +42,6 @@ public class App {
 
         System.out.println("=== Contacts App (UC-04) ===");
         System.out.println("Step 1: Register a new user");
-
-        // --- Registration input ---
         UserRegistrationRequest req = new UserRegistrationRequest();
         System.out.print("Enter username: ");
         req.username = sc.nextLine();
@@ -86,7 +83,6 @@ public class App {
             String choice = sc.nextLine().trim();
 
             if ("1".equals(choice)) {
-                // Change details
                 System.out.println("\n-- Change My Details --");
                 System.out.print("New full name: ");
                 String newName = sc.nextLine();
@@ -102,7 +98,6 @@ public class App {
                 }
 
             } else if ("2".equals(choice)) {
-                // Add a contact (simple)
                 System.out.println("\n-- Add Contact --");
                 System.out.print("Contact name: ");
                 String contactName = sc.nextLine();
