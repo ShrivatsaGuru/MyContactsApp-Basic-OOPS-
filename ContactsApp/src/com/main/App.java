@@ -8,22 +8,25 @@ import com.authentication.*;
 import com.registration.RegistrationService;
 import com.registration.UserRegistrationRequest;
 import com.createContact.*;
-import com.editContact.EditContactService;
+import com.editContact.*;
 
 import java.util.*;
 
 
+import java.time.LocalDate;
+
+
 /*
-Contacts App : UC-09 Search Contacts
-This class demonstrates searching contacts.
+Contacts App : UC-10 Filter Contacts
+This class demonstrates filtering contacts.
 It does the following things:
     - Registers a user
-    - Lets the user add and manage contacts
-    - Searches by name, phone, email, tag, or everywhere
-    - Prints matches clearly in a beginner-friendly way
+    - Lets the user manage contacts (add/edit/delete/tags)
+    - Filters contacts by tag, date range, or both
+    - Prints results clearly for beginners to follow
 
 @author Developer
-@version 9.0
+@version 10.0
 */
 
 public class App {
@@ -38,7 +41,7 @@ public class App {
         ContactRepository contactRepo = new ContactRepository();
         ContactService contactService = new ContactService(contactRepo);
 
-        System.out.println("=== UC-09 Demo: Search Contacts ===");
+        System.out.println("=== UC-10 Demo: Filter Contacts ===");
         System.out.println("Step 1: Register a new user");
 
         // Register user
@@ -75,8 +78,11 @@ public class App {
             System.out.println("7) Bulk remove a tag");
             System.out.println("8) Change my details (name/email)");
             System.out.println("9) Search contacts");
-            System.out.println("10) Exit");
-            System.out.print("Enter choice (1-10): ");
+            System.out.println("10) Filter by tag");
+            System.out.println("11) Filter by date range (yyyy-MM-dd)");
+            System.out.println("12) Filter by tag AND date range");
+            System.out.println("13) Exit");
+            System.out.print("Enter choice (1-13): ");
             String choice = sc.nextLine().trim();
 
             if ("1".equals(choice)) {
@@ -148,11 +154,10 @@ public class App {
             } else if ("3".equals(choice)) {
                 // List contacts
                 System.out.println("\n-- My Contacts --");
-                List<Contact> all = contactRepo.getAll(user.getId());
-                printContacts(all);
+                printContacts(contactRepo.getAll(user.getId()));
 
             } else if ("4".equals(choice)) {
-                // Delete single contact
+                // Delete single
                 System.out.println("\n-- Delete Contact --");
                 System.out.print("Enter Contact ID to delete: ");
                 String cid = sc.nextLine().trim();
@@ -173,7 +178,7 @@ public class App {
                 System.out.println("Deleted " + deleted + " contacts.");
 
             } else if ("6".equals(choice)) {
-                // Bulk add a tag
+                // Bulk add tag
                 System.out.println("\n-- Bulk Add Tag --");
                 System.out.println("Enter contact IDs separated by commas:");
                 String line = sc.nextLine();
@@ -188,7 +193,7 @@ public class App {
                 }
 
             } else if ("7".equals(choice)) {
-                // Bulk remove a tag
+                // Bulk remove tag
                 System.out.println("\n-- Bulk Remove Tag --");
                 System.out.println("Enter contact IDs separated by commas:");
                 String line = sc.nextLine();
@@ -217,7 +222,7 @@ public class App {
                 }
 
             } else if ("9".equals(choice)) {
-                // Search contacts
+                // (From UC-09) Search contacts (kept if you included UC-09)
                 System.out.println("\n-- Search Contacts --");
                 System.out.println("Choose field:");
                 System.out.println("1) Name  2) Phone  3) Email  4) Tag  5) Anywhere");
@@ -241,10 +246,44 @@ public class App {
                 }
 
             } else if ("10".equals(choice)) {
+                // Filter by tag
+                System.out.println("\n-- Filter: By Tag --");
+                System.out.print("Enter tag text (contains): ");
+                String tagPart = sc.nextLine().trim();
+                List<Contact> results = contactService.filterByTag(user, tagPart);
+                printFilterResults(results);
+
+            } else if ("11".equals(choice)) {
+                // Filter by date range
+                System.out.println("\n-- Filter: By Date Range --");
+                System.out.println("Enter dates as yyyy-MM-dd. Leave empty to skip a bound.");
+                System.out.print("Start date: ");
+                LocalDate start = DateUtils.parseDateOrNull(sc.nextLine());
+                System.out.print("End date: ");
+                LocalDate end = DateUtils.parseDateOrNull(sc.nextLine());
+
+                List<Contact> results = contactService.filterByDate(user, start, end);
+                printFilterResults(results);
+
+            } else if ("12".equals(choice)) {
+                // Filter by tag AND date range
+                System.out.println("\n-- Filter: By Tag AND Date Range --");
+                System.out.print("Enter tag text (contains): ");
+                String tagPart = sc.nextLine().trim();
+                System.out.println("Enter dates as yyyy-MM-dd. Leave empty to skip a bound.");
+                System.out.print("Start date: ");
+                LocalDate start = DateUtils.parseDateOrNull(sc.nextLine());
+                System.out.print("End date: ");
+                LocalDate end = DateUtils.parseDateOrNull(sc.nextLine());
+
+                List<Contact> results = contactService.filterByTagAndDate(user, tagPart, start, end);
+                printFilterResults(results);
+
+            } else if ("13".equals(choice)) {
                 break;
 
             } else {
-                System.out.println("Invalid choice. Please enter 1-10.");
+                System.out.println("Invalid choice. Please enter 1-13.");
             }
         }
 
@@ -272,6 +311,16 @@ public class App {
             System.out.println("  Phones: " + c.getPhoneNumbers());
             System.out.println("  Emails: " + c.getEmailAddresses());
             System.out.println("  Tags: " + c.getTags());
+            System.out.println("  CreatedAt: " + c.getCreatedAt());
+        }
+    }
+
+    private static void printFilterResults(List<Contact> results) {
+        if (results.isEmpty()) {
+            System.out.println("No contacts matched your filter.");
+        } else {
+            System.out.println("Matched contacts: " + results.size());
+            printContacts(results);
         }
     }
 }

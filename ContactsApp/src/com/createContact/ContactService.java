@@ -9,19 +9,20 @@ import com.exception.*;
 import java.util.*;
 
 
+import java.time.LocalDate;
 
 /*
-Contacts App : UC-09 Search Contacts
-This class manages contacts for a user.
+Contacts App : UC-10 Filter Contacts
+This class manages and filters contacts.
 It does the following things:
-    - Adds and edits contacts (from earlier UCs)
-    - Searches contacts by name, phone, email, or tags
-    - Searches across all fields with a single query
+    - Adds, edits, deletes, tags (from earlier UCs)
+    - (UC-09) Searches by name, phone, email, tag, or everywhere
+    - (UC-10) Filters by tag, by date range, or by tag AND date range
     - Uses simple "contains" matching (case-insensitive)
-    - Keeps logic small and beginner-friendly
+    - Keeps logic very simple and easy to read
 
 @author Developer
-@version 9.0
+@version 10.0
 */
 
 public class ContactService {
@@ -32,7 +33,8 @@ public class ContactService {
         this.repo = repo;
     }
 
-    // --- Existing methods kept from earlier UCs (add/edit/delete) ---
+    // ===== Core operations (kept from earlier UCs) =====
+
     public Contact addContact(User owner, String name, List<String> phones, List<String> emails) {
         int current = repo.countForUser(owner.getId());
         int limit = owner.getUserType().getMaxContacts();
@@ -106,23 +108,21 @@ public class ContactService {
         return updated;
     }
 
-    // --- NEW in UC-09: Simple, case-insensitive "contains" searches ---
+    // ===== UC-09: Search (KEPT as-is) =====
 
     public List<Contact> searchByName(User owner, String text) {
-        List<Contact> all = repo.getAll(owner.getId());
         List<Contact> out = new ArrayList<>();
         if (isBlank(text)) return out;
-        for (Contact c : all) {
+        for (Contact c : repo.getAll(owner.getId())) {
             if (containsIgnoreCase(c.getName(), text)) out.add(c);
         }
         return out;
     }
 
     public List<Contact> searchByPhone(User owner, String digits) {
-        List<Contact> all = repo.getAll(owner.getId());
         List<Contact> out = new ArrayList<>();
         if (isBlank(digits)) return out;
-        for (Contact c : all) {
+        for (Contact c : repo.getAll(owner.getId())) {
             for (String p : c.getPhoneNumbers()) {
                 if (containsIgnoreCase(p, digits)) { out.add(c); break; }
             }
@@ -131,10 +131,9 @@ public class ContactService {
     }
 
     public List<Contact> searchByEmail(User owner, String text) {
-        List<Contact> all = repo.getAll(owner.getId());
         List<Contact> out = new ArrayList<>();
         if (isBlank(text)) return out;
-        for (Contact c : all) {
+        for (Contact c : repo.getAll(owner.getId())) {
             for (String e : c.getEmailAddresses()) {
                 if (containsIgnoreCase(e, text)) { out.add(c); break; }
             }
@@ -143,10 +142,9 @@ public class ContactService {
     }
 
     public List<Contact> searchByTag(User owner, String tagPart) {
-        List<Contact> all = repo.getAll(owner.getId());
         List<Contact> out = new ArrayList<>();
         if (isBlank(tagPart)) return out;
-        for (Contact c : all) {
+        for (Contact c : repo.getAll(owner.getId())) {
             for (String t : c.getTags()) {
                 if (containsIgnoreCase(t, tagPart)) { out.add(c); break; }
             }
@@ -154,9 +152,8 @@ public class ContactService {
         return out;
     }
 
-    // One query across name, phones, emails, and tags
     public List<Contact> searchAll(User owner, String query) {
-        Set<String> seenIds = new HashSet<>();
+        Set<String> seen = new HashSet<>();
         List<Contact> result = new ArrayList<>();
         if (isBlank(query)) return result;
 
@@ -165,33 +162,67 @@ public class ContactService {
 
             if (containsIgnoreCase(c.getName(), query)) match = true;
 
-            if (!match) {
-                for (String p : c.getPhoneNumbers())
-                    if (containsIgnoreCase(p, query)) { match = true; break; }
-            }
+            if (!match) for (String p : c.getPhoneNumbers())
+                if (containsIgnoreCase(p, query)) { match = true; break; }
 
-            if (!match) {
-                for (String e : c.getEmailAddresses())
-                    if (containsIgnoreCase(e, query)) { match = true; break; }
-            }
+            if (!match) for (String e : c.getEmailAddresses())
+                if (containsIgnoreCase(e, query)) { match = true; break; }
 
-            if (!match) {
-                for (String t : c.getTags())
-                    if (containsIgnoreCase(t, query)) { match = true; break; }
-            }
+            if (!match) for (String t : c.getTags())
+                if (containsIgnoreCase(t, query)) { match = true; break; }
 
-            if (match && !seenIds.contains(c.getId())) {
-                seenIds.add(c.getId());
-                result.add(c);
-            }
+            if (match && seen.add(c.getId())) result.add(c);
         }
         return result;
     }
 
-    // --- Helpers ---
+    // ===== UC-10: Filter (NEW) =====
+
+    public List<Contact> filterByTag(User owner, String tagPart) {
+        List<Contact> out = new ArrayList<>();
+        if (isBlank(tagPart)) return out;
+        String needle = tagPart.toLowerCase();
+        for (Contact c : repo.getAll(owner.getId())) {
+            for (String t : c.getTags()) {
+                if (t != null && t.toLowerCase().contains(needle)) {
+                    out.add(c); break;
+                }
+            }
+        }
+        return out;
+    }
+
+    public List<Contact> filterByDate(User owner, LocalDate start, LocalDate end) {
+        List<Contact> out = new ArrayList<>();
+        for (Contact c : repo.getAll(owner.getId())) {
+            LocalDate created = c.getCreatedAt().toLocalDate();
+            boolean ok = true;
+            if (start != null && created.isBefore(start)) ok = false;
+            if (end   != null && created.isAfter(end))   ok = false;
+            if (ok) out.add(c);
+        }
+        return out;
+    }
+
+    public List<Contact> filterByTagAndDate(User owner, String tagPart, LocalDate start, LocalDate end) {
+        List<Contact> byTag = filterByTag(owner, tagPart);
+        if (start == null && end == null) return byTag;
+
+        List<Contact> out = new ArrayList<>();
+        for (Contact c : byTag) {
+            LocalDate created = c.getCreatedAt().toLocalDate();
+            boolean ok = true;
+            if (start != null && created.isBefore(start)) ok = false;
+            if (end   != null && created.isAfter(end))   ok = false;
+            if (ok) out.add(c);
+        }
+        return out;
+    }
+
+    // Helpers
     private static boolean containsIgnoreCase(String text, String part) {
         if (text == null || part == null) return false;
         return text.toLowerCase().contains(part.toLowerCase());
-        }
+    }
     private static boolean isBlank(String s) { return s == null || s.trim().isEmpty(); }
 }
