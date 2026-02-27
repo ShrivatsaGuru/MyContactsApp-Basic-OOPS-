@@ -12,7 +12,7 @@ import java.util.*;
 import java.time.LocalDate;
 
 /*
-Contacts App : UC-10 Filter Contacts
+Contacts App : UC-11 Filter Contacts
 This class manages and filters contacts.
 It does the following things:
     - Adds, edits, deletes, tags (from earlier UCs)
@@ -20,9 +20,10 @@ It does the following things:
     - (UC-10) Filters by tag, by date range, or by tag AND date range
     - Uses simple "contains" matching (case-insensitive)
     - Keeps logic very simple and easy to read
+    - Lets user add custom tags to contacts
 
 @author Developer
-@version 10.0
+@version 11.0
 */
 
 public class ContactService {
@@ -35,15 +36,24 @@ public class ContactService {
 
     // ===== Core operations (kept from earlier UCs) =====
 
-    public Contact addContact(User owner, String name, List<String> phones, List<String> emails) {
+ // Inside ContactService class
+    public Contact addContact(User owner, String name, List<String> phones, List<String> emails, String contactTypeTag) {
+
         int current = repo.countForUser(owner.getId());
         int limit = owner.getUserType().getMaxContacts();
         if (current >= limit) {
             throw new ValidationException("Contact limit reached for user type " + owner.getUserType());
         }
+
         Contact c = new Contact(owner.getId(), name);
+
+        // Basic fields
         if (phones != null) for (String p : phones) c.addPhone(p);
         if (emails != null) for (String e : emails) c.addEmail(e);
+
+        // === NEW IN UC-11: assign the type tag ===
+        c.addTag(contactTypeTag);
+
         repo.add(owner.getId(), c);
         return c;
     }

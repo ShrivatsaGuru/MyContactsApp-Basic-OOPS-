@@ -17,16 +17,19 @@ import java.time.LocalDate;
 
 
 /*
-Contacts App : UC-10 Filter Contacts
-This class demonstrates filtering contacts.
+Contacts App : UC-11 Contact Type Tagging
+This class demonstrates the full flow with tagging contact type.
 It does the following things:
     - Registers a user
-    - Lets the user manage contacts (add/edit/delete/tags)
-    - Filters contacts by tag, date range, or both
-    - Prints results clearly for beginners to follow
+    - Lets the user manage contacts (add/edit/delete)
+    - (UC-11) On add, asks if contact is a Person or Organization and tags it
+    - (UC-08) Supports bulk delete and bulk tag add/remove
+    - (UC-09) Searches by name, phone, email, tag, or anywhere
+    - (UC-10) Filters by tag, date range, or both
+    - Keeps the menu simple and beginner-friendly
 
 @author Developer
-@version 10.0
+@version 11.0
 */
 
 public class App {
@@ -41,7 +44,7 @@ public class App {
         ContactRepository contactRepo = new ContactRepository();
         ContactService contactService = new ContactService(contactRepo);
 
-        System.out.println("=== UC-10 Demo: Filter Contacts ===");
+        System.out.println("=== UC-11 Demo: Add Contact with Type Tag (Person/Organization) ===");
         System.out.println("Step 1: Register a new user");
 
         // Register user
@@ -66,7 +69,7 @@ public class App {
             return;
         }
 
-        // Menu loop
+        // Menu loop (UC-09 search preserved; UC-10 filters preserved; UC-11 add type tag)
         while (true) {
             System.out.println("\nWhat would you like to do?");
             System.out.println("1) Add a contact");
@@ -77,17 +80,30 @@ public class App {
             System.out.println("6) Bulk add a tag");
             System.out.println("7) Bulk remove a tag");
             System.out.println("8) Change my details (name/email)");
-            System.out.println("9) Search contacts");
-            System.out.println("10) Filter by tag");
-            System.out.println("11) Filter by date range (yyyy-MM-dd)");
-            System.out.println("12) Filter by tag AND date range");
+            System.out.println("9) Search contacts"); // UC-09
+            System.out.println("10) Filter by tag");  // UC-10
+            System.out.println("11) Filter by date range (yyyy-MM-dd)"); // UC-10
+            System.out.println("12) Filter by tag AND date range");      // UC-10
             System.out.println("13) Exit");
             System.out.print("Enter choice (1-13): ");
             String choice = sc.nextLine().trim();
 
             if ("1".equals(choice)) {
-                // Add contact
+                // === UC-11 Add Contact with Type Tag ===
                 System.out.println("\n-- Add Contact --");
+
+                // Ask for contact type
+                System.out.println("Choose contact type:");
+                System.out.println("1) Person");
+                System.out.println("2) Organization");
+                System.out.print("Enter 1 or 2: ");
+                String typeChoice = sc.nextLine().trim();
+
+                String typeTag = "person";
+                if ("2".equals(typeChoice)) {
+                    typeTag = "organization";
+                }
+
                 System.out.print("Contact name: ");
                 String name = sc.nextLine();
 
@@ -102,14 +118,15 @@ public class App {
                 if (!e.isEmpty()) emails.add(e);
 
                 try {
-                    Contact c = contactService.addContact(user, name, phones, emails);
-                    System.out.println("Contact added! ID: " + c.getId());
+                    // NOTE: uses the UC-11 overload: addContact(..., contactTypeTag)
+                    Contact c = contactService.addContact(user, name, phones, emails, typeTag);
+                    System.out.println("Contact added! ID: " + c.getId() + " | Type Tag: " + typeTag);
                 } catch (Exception ex) {
                     System.out.println("Could not add contact: " + ex.getMessage());
                 }
 
             } else if ("2".equals(choice)) {
-                // Edit contact
+                // Edit contact (UC-05)
                 System.out.println("\n-- Edit Contact --");
                 System.out.print("Enter Contact ID to edit: ");
                 String cid = sc.nextLine().trim();
@@ -157,7 +174,7 @@ public class App {
                 printContacts(contactRepo.getAll(user.getId()));
 
             } else if ("4".equals(choice)) {
-                // Delete single
+                // Delete single (UC-07)
                 System.out.println("\n-- Delete Contact --");
                 System.out.print("Enter Contact ID to delete: ");
                 String cid = sc.nextLine().trim();
@@ -169,7 +186,7 @@ public class App {
                 }
 
             } else if ("5".equals(choice)) {
-                // Bulk delete
+                // Bulk delete (UC-08)
                 System.out.println("\n-- Bulk Delete Contacts --");
                 System.out.println("Enter contact IDs separated by commas:");
                 String line = sc.nextLine();
@@ -178,7 +195,7 @@ public class App {
                 System.out.println("Deleted " + deleted + " contacts.");
 
             } else if ("6".equals(choice)) {
-                // Bulk add tag
+                // Bulk add tag (UC-08)
                 System.out.println("\n-- Bulk Add Tag --");
                 System.out.println("Enter contact IDs separated by commas:");
                 String line = sc.nextLine();
@@ -193,7 +210,7 @@ public class App {
                 }
 
             } else if ("7".equals(choice)) {
-                // Bulk remove tag
+                // Bulk remove tag (UC-08)
                 System.out.println("\n-- Bulk Remove Tag --");
                 System.out.println("Enter contact IDs separated by commas:");
                 String line = sc.nextLine();
@@ -208,7 +225,7 @@ public class App {
                 }
 
             } else if ("8".equals(choice)) {
-                // Change user details
+                // Change user details (UC-03)
                 System.out.println("\n-- Change My Details --");
                 System.out.print("New full name: ");
                 String newName = sc.nextLine();
@@ -222,7 +239,7 @@ public class App {
                 }
 
             } else if ("9".equals(choice)) {
-                // (From UC-09) Search contacts (kept if you included UC-09)
+                // Search (UC-09)
                 System.out.println("\n-- Search Contacts --");
                 System.out.println("Choose field:");
                 System.out.println("1) Name  2) Phone  3) Email  4) Tag  5) Anywhere");
@@ -246,7 +263,7 @@ public class App {
                 }
 
             } else if ("10".equals(choice)) {
-                // Filter by tag
+                // Filter by tag (UC-10)
                 System.out.println("\n-- Filter: By Tag --");
                 System.out.print("Enter tag text (contains): ");
                 String tagPart = sc.nextLine().trim();
@@ -254,19 +271,18 @@ public class App {
                 printFilterResults(results);
 
             } else if ("11".equals(choice)) {
-                // Filter by date range
+                // Filter by date range (UC-10)
                 System.out.println("\n-- Filter: By Date Range --");
                 System.out.println("Enter dates as yyyy-MM-dd. Leave empty to skip a bound.");
                 System.out.print("Start date: ");
                 LocalDate start = DateUtils.parseDateOrNull(sc.nextLine());
                 System.out.print("End date: ");
                 LocalDate end = DateUtils.parseDateOrNull(sc.nextLine());
-
                 List<Contact> results = contactService.filterByDate(user, start, end);
                 printFilterResults(results);
 
             } else if ("12".equals(choice)) {
-                // Filter by tag AND date range
+                // Filter by tag AND date range (UC-10)
                 System.out.println("\n-- Filter: By Tag AND Date Range --");
                 System.out.print("Enter tag text (contains): ");
                 String tagPart = sc.nextLine().trim();
@@ -275,7 +291,6 @@ public class App {
                 LocalDate start = DateUtils.parseDateOrNull(sc.nextLine());
                 System.out.print("End date: ");
                 LocalDate end = DateUtils.parseDateOrNull(sc.nextLine());
-
                 List<Contact> results = contactService.filterByTagAndDate(user, tagPart, start, end);
                 printFilterResults(results);
 
