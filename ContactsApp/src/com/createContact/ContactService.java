@@ -12,7 +12,7 @@ import java.util.*;
 import java.time.LocalDate;
 
 /*
-Contacts App : UC-11 Filter Contacts
+Contacts App : UC-12 Filter Contacts
 This class manages and filters contacts.
 It does the following things:
     - Adds, edits, deletes, tags (from earlier UCs)
@@ -21,9 +21,11 @@ It does the following things:
     - Uses simple "contains" matching (case-insensitive)
     - Keeps logic very simple and easy to read
     - Lets user add custom tags to contacts
+    - Let's User add multiple tags to single contact
+    - Let's User remove tags from existing contacts
 
 @author Developer
-@version 11.0
+@version 12.0
 */
 
 public class ContactService {
@@ -116,6 +118,38 @@ public class ContactService {
             }
         }
         return updated;
+    }
+ // === UC-12: Add multiple tags or remove a tag from a single contact ===
+
+    public void addTagsToContact(User owner, String contactId, List<String> tags) {
+        if (contactId == null || contactId.trim().isEmpty()) {
+            throw new ValidationException("Contact ID cannot be empty");
+        }
+        Contact c = repo.getById(owner.getId(), contactId);
+        if (c == null) {
+            throw new ValidationException("Contact not found for this user");
+        }
+        if (tags == null || tags.isEmpty()) return;
+
+        for (String t : tags) {
+            if (t != null && !t.trim().isEmpty()) {
+                c.addTag(t.trim());
+            }
+        }
+    }
+
+    public void removeTagFromContact(User owner, String contactId, String tag) {
+        if (contactId == null || contactId.trim().isEmpty()) {
+            throw new ValidationException("Contact ID cannot be empty");
+        }
+        if (tag == null || tag.trim().isEmpty()) {
+            throw new ValidationException("Tag cannot be empty");
+        }
+        Contact c = repo.getById(owner.getId(), contactId.trim());
+        if (c == null) {
+            throw new ValidationException("Contact not found for this user");
+        }
+        c.removeTag(tag.trim());
     }
 
     // ===== UC-09: Search (KEPT as-is) =====
