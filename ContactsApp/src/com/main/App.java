@@ -12,18 +12,18 @@ import com.editContact.EditContactService;
 
 import java.util.*;
 
+
 /*
-Contacts App : UC-08 Bulk Operations
-This class demonstrates bulk delete and tagging.
+Contacts App : UC-09 Search Contacts
+This class demonstrates searching contacts.
 It does the following things:
     - Registers a user
-    - Lets the user add and edit contacts
-    - Lets the user bulk delete contacts by IDs
-    - Lets the user bulk add or remove a tag on many contacts
-    - Keeps interactions very simple and beginner-friendly
+    - Lets the user add and manage contacts
+    - Searches by name, phone, email, tag, or everywhere
+    - Prints matches clearly in a beginner-friendly way
 
 @author Developer
-@version 8.0
+@version 9.0
 */
 
 public class App {
@@ -34,11 +34,11 @@ public class App {
         // Setup
         UserRepository userRepo = new UserRepository();
         RegistrationService regService = new RegistrationService(userRepo);
-        ProfileService profileService = new ProfileService(userRepo); // from UC-03
+        ProfileService profileService = new ProfileService(userRepo); // UC-03
         ContactRepository contactRepo = new ContactRepository();
         ContactService contactService = new ContactService(contactRepo);
 
-        System.out.println("=== UC-08 Demo: Bulk Operations ===");
+        System.out.println("=== UC-09 Demo: Search Contacts ===");
         System.out.println("Step 1: Register a new user");
 
         // Register user
@@ -74,8 +74,9 @@ public class App {
             System.out.println("6) Bulk add a tag");
             System.out.println("7) Bulk remove a tag");
             System.out.println("8) Change my details (name/email)");
-            System.out.println("9) Exit");
-            System.out.print("Enter choice (1-9): ");
+            System.out.println("9) Search contacts");
+            System.out.println("10) Exit");
+            System.out.print("Enter choice (1-10): ");
             String choice = sc.nextLine().trim();
 
             if ("1".equals(choice)) {
@@ -148,17 +149,7 @@ public class App {
                 // List contacts
                 System.out.println("\n-- My Contacts --");
                 List<Contact> all = contactRepo.getAll(user.getId());
-                if (all.isEmpty()) {
-                    System.out.println("You have no contacts yet.");
-                } else {
-                    for (Contact c : all) {
-                        System.out.println("- ID: " + c.getId());
-                        System.out.println("  Name: " + c.getName());
-                        System.out.println("  Phones: " + c.getPhoneNumbers());
-                        System.out.println("  Emails: " + c.getEmailAddresses());
-                        System.out.println("  Tags: " + c.getTags());
-                    }
-                }
+                printContacts(all);
 
             } else if ("4".equals(choice)) {
                 // Delete single contact
@@ -226,11 +217,34 @@ public class App {
                 }
 
             } else if ("9".equals(choice)) {
-                System.out.println("Goodbye!");
+                // Search contacts
+                System.out.println("\n-- Search Contacts --");
+                System.out.println("Choose field:");
+                System.out.println("1) Name  2) Phone  3) Email  4) Tag  5) Anywhere");
+                String f = sc.nextLine().trim();
+                System.out.print("Enter search text: ");
+                String q = sc.nextLine().trim();
+
+                List<Contact> results = new ArrayList<>();
+                if ("1".equals(f))       results = contactService.searchByName(user, q);
+                else if ("2".equals(f))  results = contactService.searchByPhone(user, q);
+                else if ("3".equals(f))  results = contactService.searchByEmail(user, q);
+                else if ("4".equals(f))  results = contactService.searchByTag(user, q);
+                else if ("5".equals(f))  results = contactService.searchAll(user, q);
+                else System.out.println("Invalid field choice.");
+
+                if (!results.isEmpty()) {
+                    System.out.println("\nMatches (" + results.size() + "):");
+                    printContacts(results);
+                } else {
+                    System.out.println("No contacts matched your search.");
+                }
+
+            } else if ("10".equals(choice)) {
                 break;
 
             } else {
-                System.out.println("Invalid choice. Please enter 1-9.");
+                System.out.println("Invalid choice. Please enter 1-10.");
             }
         }
 
@@ -238,14 +252,27 @@ public class App {
     }
 
     private static List<String> parseIds(String csv) {
-        if (csv == null || csv.trim().isEmpty()) return new ArrayList<>();
-        String[] parts = csv.split(",");
         List<String> ids = new ArrayList<>();
-        for (String p : parts) {
+        if (csv == null || csv.trim().isEmpty()) return ids;
+        for (String p : csv.split(",")) {
             String id = p.trim();
             if (!id.isEmpty()) ids.add(id);
         }
         return ids;
+    }
+
+    private static void printContacts(List<Contact> list) {
+        if (list == null || list.isEmpty()) {
+            System.out.println("No contacts.");
+            return;
+        }
+        for (Contact c : list) {
+            System.out.println("- ID: " + c.getId());
+            System.out.println("  Name: " + c.getName());
+            System.out.println("  Phones: " + c.getPhoneNumbers());
+            System.out.println("  Emails: " + c.getEmailAddresses());
+            System.out.println("  Tags: " + c.getTags());
+        }
     }
 }
 
