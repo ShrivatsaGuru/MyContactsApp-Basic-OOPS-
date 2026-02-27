@@ -4,17 +4,17 @@ package com.createContact;
 import java.util.*;
 
 /*
-Contacts App : UC-06 Edit Contact
+Contacts App : UC-07 Delete Contact
 This class stores contacts in memory.
 It does the following things:
     - Uses a HashMap of userId → list of contacts
-    - Adds contacts for users
-    - Returns all contacts for a user
-    - Looks up a specific contact by its id
-    - Keeps everything extremely simple for beginners
+    - Adds and lists contacts for a user
+    - Looks up a contact by its id
+    - Deletes a contact by its id for a user
+    - Keeps everything very simple for beginners
 
 @author Developer
-@version 6.0
+@version 7.0
 */
 
 public class ContactRepository {
@@ -40,5 +40,21 @@ public class ContactRepository {
             if (c.getId().equals(contactId)) return c;
         }
         return null;
+    }
+
+    // NEW in UC-07: delete a contact by ID for the given user
+    public boolean deleteById(String userId, String contactId) {
+        List<Contact> list = byUser.get(userId);
+        if (list == null) return false;
+
+        Iterator<Contact> it = list.iterator();
+        while (it.hasNext()) {
+            Contact c = it.next();
+            if (c.getId().equals(contactId)) {
+                it.remove();
+                return true;
+            }
+        }
+        return false;
     }
 }

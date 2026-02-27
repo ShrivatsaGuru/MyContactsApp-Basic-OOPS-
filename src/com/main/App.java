@@ -14,17 +14,16 @@ import java.util.*;
 
 
 /*
-Contacts App : UC-06 Edit Contact
-This class demonstrates editing contacts.
+Contacts App : UC-07 Delete Contact
+This class demonstrates deleting contacts.
 It does the following things:
     - Registers a user
-    - Lets the user add contacts
-    - Lets the user edit an existing contact
-    - Lets the user list all contacts
+    - Lets the user add and list contacts
+    - Lets the user delete a contact by ID
     - Keeps interactions very simple and beginner-friendly
 
 @author Developer
-@version 6.0
+@version 7.0
 */
 
 public class App {
@@ -32,6 +31,7 @@ public class App {
 
         Scanner sc = new Scanner(System.in);
 
+        // Setup
         UserRepository userRepo = new UserRepository();
         RegistrationService regService = new RegistrationService(userRepo);
         ProfileService profileService = new ProfileService(userRepo); // from UC-03
@@ -68,9 +68,10 @@ public class App {
             System.out.println("1) Add a contact");
             System.out.println("2) Edit a contact");
             System.out.println("3) List my contacts");
-            System.out.println("4) Change my details (name/email)");
-            System.out.println("5) Exit");
-            System.out.print("Enter choice (1-5): ");
+            System.out.println("4) Delete a contact");
+            System.out.println("5) Change my details (name/email)");
+            System.out.println("6) Exit");
+            System.out.print("Enter choice (1-6): ");
             String choice = sc.nextLine().trim();
 
             if ("1".equals(choice)) {
@@ -155,6 +156,19 @@ public class App {
                 }
 
             } else if ("4".equals(choice)) {
+                // Delete contact
+                System.out.println("\n-- Delete Contact --");
+                System.out.print("Enter Contact ID to delete: ");
+                String cid = sc.nextLine().trim();
+
+                try {
+                    contactService.deleteContact(user, cid);
+                    System.out.println("Contact deleted successfully.");
+                } catch (Exception ex) {
+                    System.out.println("Delete failed: " + ex.getMessage());
+                }
+
+            } else if ("5".equals(choice)) {
                 // Change user details
                 System.out.println("\n-- Change My Details --");
                 System.out.print("New full name: ");
@@ -168,15 +182,15 @@ public class App {
                     System.out.println("Update failed: " + ex.getMessage());
                 }
 
-            } else if ("5".equals(choice)) {
-                System.out.println("Goodbye!");
+            } else if ("6".equals(choice)) {
                 break;
 
             } else {
-                System.out.println("Invalid choice. Please enter 1-5.");
+                System.out.println("Invalid choice. Please enter 1-6.");
             }
         }
 
         sc.close();
     }
 }
+
